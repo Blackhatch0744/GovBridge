@@ -4,7 +4,7 @@
 
 **AI-powered GovTech platform that bridges the gap between government funding and the businesses that need it most.**
 
-[![Tech](https://img.shields.io/badge/AI-Gemini%201.5%20Flash-blue?logo=google)](https://ai.google.dev/)
+[![Tech](https://img.shields.io/badge/AI-Gemini%202.0%20Flash-blue?logo=google)](https://ai.google.dev/)
 [![Backend](https://img.shields.io/badge/Backend-FastAPI-009688?logo=fastapi)](https://fastapi.tiangolo.com/)
 [![Frontend](https://img.shields.io/badge/Frontend-Next.js%2014-black?logo=next.js)](https://nextjs.org/)
 [![Database](https://img.shields.io/badge/Database-PostgreSQL%20(Neon)-336791?logo=postgresql)](https://neon.tech/)
