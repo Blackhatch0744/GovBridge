@@ -1,108 +1,628 @@
-# GovBridge GrantMate
+# 🌉 GovBridge
 
-AI-powered GovTech platform connecting government funding to local employment.
+<div align="center">
 
-## Overview
+**AI-powered GovTech platform that bridges the gap between government funding and the businesses that need it most.**
 
-GovBridge GrantMate helps MSMEs, startups, and NGOs discover government funding schemes, verify document compliance, generate AI-powered grant proposals, and create local employment — all from a single platform.
+[![Tech](https://img.shields.io/badge/AI-Gemini%201.5%20Flash-blue?logo=google)](https://ai.google.dev/)
+[![Backend](https://img.shields.io/badge/Backend-FastAPI-009688?logo=fastapi)](https://fastapi.tiangolo.com/)
+[![Frontend](https://img.shields.io/badge/Frontend-Next.js%2014-black?logo=next.js)](https://nextjs.org/)
+[![Database](https://img.shields.io/badge/Database-PostgreSQL%20(Neon)-336791?logo=postgresql)](https://neon.tech/)
+[![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 
-## Tech Stack
+[🚀 Live Demo](#demo) · [📖 Docs](#setup--installation) · [🤝 Contribute](#contributors)
 
-| Layer | Technology |
+</div>
+
+---
+
+## 📌 Table of Contents
+
+1. [Project Overview](#1-project-overview)
+2. [Key Features](#2-key-features)
+3. [Complete Workflow](#3-complete-workflow)
+4. [System Architecture](#4-system-architecture)
+5. [Tech Stack](#5-tech-stack)
+6. [AI Integration](#6-ai-integration)
+7. [Folder Structure](#7-folder-structure)
+8. [Setup & Installation](#8-setup--installation)
+9. [Usage Guide](#9-usage-guide)
+10. [Future Scope](#10-future-scope--expansion)
+11. [Demo & Screenshots](#11-demo--screenshots)
+12. [Contributors](#12-contributors)
+
+---
+
+## 1. Project Overview
+
+### What is GovBridge?
+
+GovBridge GrantMate is an **AI-powered GovTech platform** that helps **MSMEs, startups, and NGOs** discover government funding schemes, assess their eligibility, generate grant proposals, and manage their application workflows — all from a single, unified interface.
+
+### The Problem We're Solving
+
+> **Over ₹2 lakh crore** in government funding goes unutilized every year in India alone — not because businesses don't qualify, but because they can't *find*, *understand*, or *apply* for the right schemes.
+
+| Pain Point | Reality |
 |---|---|
-| Frontend | Next.js 14 · React 18 · Framer Motion · Tailwind |
-| Backend | FastAPI · SQLAlchemy · PostgreSQL (Neon) |
-| AI | Google Gemini 1.5 Flash (6-key rotation) |
-| Storage | Supabase (documents) |
-| Auth | JWT (python-jose + passlib/bcrypt) |
+| 🔍 Discovery | Government portals are fragmented, jargon-heavy, and hard to navigate |
+| 📋 Eligibility | Businesses don't know if they qualify until they've spent weeks applying |
+| 📄 Documentation | Proposal writing is complex, time-consuming, and often requires expensive consultants |
+| ⏱️ Speed | Manual application processes are slow and error-prone |
 
-## Setup
+These barriers disproportionately affect small businesses and nonprofits that lack the legal and financial teams large enterprises take for granted.
 
-### Backend
+### Why This Matters
 
-```bash
-cd backend
-pip install -r requirements.txt
-cp .env.example .env       # Fill in your keys
-python -m backend.seed.seed # Seed database with 15 schemes + 2 users
-uvicorn backend.main:app --reload
+- India has **63 million+ MSMEs** contributing ~30% of GDP — most have never accessed a government scheme
+- Startups in Tier 2 and Tier 3 cities face an **information gap** vs. metro-based peers
+- NGOs and social enterprises routinely miss grant cycles due to **discovery failures**
+- Billions in public funding meant to stimulate the economy **goes undeployed**
+
+### Who Is This For?
+
+| User Type | Use Case |
+|---|---|
+| **MSMEs** | Discover manufacturing/trade subsidies, apply with AI-generated proposals |
+| **Startups** | Find startup India schemes, DPIIT recognition, R&D grants |
+| **NGOs / Non-Profits** | Discover social impact grants, CSR-linked schemes |
+| **Consultants** | Help multiple clients navigate funding landscapes efficiently |
+
+---
+
+## 2. Key Features
+
+> ✅ **These are current, implemented features in the platform.**
+
+### 🤖 AI-Powered Scheme Discovery
+- Natural language search across **15+ curated government schemes**
+- Gemini 1.5 Flash parses user profiles and matches relevant schemes
+- AI ranking ensures the most relevant opportunities surface first
+- All AI calls are **user-triggered** (never on page load) for performance and cost control
+
+### 🎯 Eligibility Matching & Compliance Scoring
+- Rule-based compliance engine that checks documents against scheme requirements
+- Compliance score is computed using **transparent mathematical logic** — no guesswork, no fabricated predictions
+- Clear checklist: what's complete, what's missing, and what to fix
+- Helps businesses understand their readiness *before* investing in a full application
+
+### 💡 Smart Recommendations via Gemini API
+- Gemini analyzes a user's business profile (type, sector, size, stage) and surfaces the best-fit schemes
+- Recommendations improve as the user adds more profile information
+- Each recommendation includes a relevance rationale generated by the AI
+
+### 📝 AI-Powered Proposal & Impact Generation
+- One-click AI drafting of grant proposals tailored to specific scheme requirements
+- AI-generated impact statements that highlight business and social outcomes
+- Outputs are editable — AI assists, the human finalizes
+- Rate-limited to prevent abuse: 60-second cooldown per generation
+
+### 📂 Workflow Automation for Applications
+- Track the full application lifecycle: Draft → Submitted → Under Review → Funded
+- Upload and manage supporting documents via Supabase storage
+- Dashboard summary of all active applications, schemes matched, and compliance scores
+
+### 💬 Conversational Onboarding
+- Guided onboarding collects business profile data in a conversational format
+- Profile data feeds directly into scheme matching and proposal generation
+- Reduces cold-start problem: new users get relevant matches immediately after signup
+
+---
+
+## 3. Complete Workflow
+
+Here is the end-to-end flow for a user on GovBridge:
+
+```
+User Signs Up / Logs In
+        │
+        ▼
+Onboarding: Business Profile Collection
+(Type · Sector · Size · Stage · Location · Revenue)
+        │
+        ▼
+Auto-Match on Signup → AI scans 15+ schemes for initial recommendations
+        │
+        ▼
+Dashboard: View Matched Schemes + Compliance Scores
+        │
+        ├──► [Button Click] Re-run AI Match
+        │           │
+        │           ▼
+        │    Gemini API → Parses profile → Ranks schemes → Returns top matches
+        │
+        ├──► [Button Click] Run Compliance Check
+        │           │
+        │           ▼
+        │    Rule engine → Compares documents vs requirements → Scores 0–100%
+        │
+        ├──► [Button Click] Generate Proposal
+        │           │
+        │           ▼
+        │    Gemini API → Drafts proposal → User edits → Submits application
+        │
+        └──► [Button Click] Generate Impact Statement
+                    │
+                    ▼
+             Gemini API → Crafts impact narrative → Attached to application
 ```
 
-### Frontend
+**Key design principles in the workflow:**
+- Every AI call is **manually triggered by the user** — no background AI polling
+- Results are **cached in-memory** per server session to avoid redundant API calls
+- All agents have **template-based fallbacks** if the Gemini API is unavailable
+- The compliance check is **purely computational** (no AI) for reliability and auditability
 
-```bash
-cd frontend
-npm install
-cp .env.local.example .env.local
-npm run dev
+---
+
+## 4. System Architecture
+
+### High-Level Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                        USER BROWSER                         │
+│              Next.js 14 · React 18 · Tailwind CSS           │
+│                    Framer Motion Animations                  │
+└───────────────────────────┬─────────────────────────────────┘
+                            │ HTTPS / REST
+                            ▼
+┌─────────────────────────────────────────────────────────────┐
+│                      FASTAPI BACKEND                        │
+│         10 Route Files · 18 Endpoints · JWT Auth            │
+│                                                             │
+│  ┌──────────────┐   ┌─────────────┐   ┌─────────────────┐  │
+│  │  Auth Routes │   │ Scheme APIs │   │  AI Agent Layer │  │
+│  │  JWT + bcrypt│   │ Match/Filter│   │  5 Gemini Agents│  │
+│  └──────────────┘   └─────────────┘   └────────┬────────┘  │
+│                                                 │           │
+│  ┌──────────────┐   ┌─────────────┐             │           │
+│  │  Compliance  │   │  Documents  │             │           │
+│  │  (pure math) │   │  Supabase   │             │           │
+│  └──────────────┘   └─────────────┘             │           │
+└─────────────────────────────────────────────────┼───────────┘
+                            │                     │
+               ┌────────────┘                     │
+               ▼                                  ▼
+┌──────────────────────┐             ┌────────────────────────┐
+│   PostgreSQL (Neon)  │             │   Google Gemini API    │
+│   9 SQLAlchemy Models│             │   1.5 Flash · 6-key    │
+│   15 Seeded Schemes  │             │   rotation for limits  │
+└──────────────────────┘             └────────────────────────┘
+               │
+               ▼
+┌──────────────────────┐
+│   Supabase Storage   │
+│   Document Uploads   │
+│   + File Management  │
+└──────────────────────┘
 ```
 
-Open [http://localhost:3000](http://localhost:3000) — landing page.
+### Data Flow
 
-### Test Credentials (from seed)
-
-| User | Email | Password |
+| Step | Action | Layer Involved |
 |---|---|---|
-| Priya Sharma (MSME) | priya@kumarfoods.in | password123 |
-| Arjun Mehta (Startup) | arjun@techstart.io | password123 |
+| 1 | User submits profile | Frontend → FastAPI |
+| 2 | Profile stored | FastAPI → PostgreSQL |
+| 3 | Match triggered | FastAPI → Gemini Agent |
+| 4 | Gemini parses + ranks | Gemini API (6-key rotation) |
+| 5 | Results cached + returned | FastAPI → Frontend |
+| 6 | User uploads document | Frontend → Supabase Storage |
+| 7 | Compliance check | FastAPI (rule engine, no AI) |
+| 8 | Proposal generated | FastAPI → Gemini Agent |
+| 9 | Application submitted | FastAPI → PostgreSQL |
 
-Or use `dev-test-token` as Bearer token for API testing.
+### AI Key Rotation Strategy
 
-## API Routes
+GovBridge uses **6 Gemini API keys in rotation** to handle rate limits gracefully. The key manager cycles through keys on quota exhaustion, ensuring the platform stays operational even under load. All agents implement fallback templates for zero-downtime resilience.
 
-| Method | Route | Description |
+---
+
+## 5. Tech Stack
+
+| Layer | Technology | Purpose |
 |---|---|---|
-| POST | /api/auth/signup | Create account + auto-match schemes |
-| POST | /api/auth/login | Login, get JWT |
-| GET | /api/auth/me | Current user |
-| GET | /api/schemes | List all schemes |
-| GET | /api/schemes/:id | Scheme details |
-| POST | /api/match | AI scheme matching (button-triggered) |
-| POST | /api/compliance | Compliance check (pure math) |
-| POST | /api/documents/upload | Upload document |
-| GET | /api/documents | List documents |
-| POST | /api/generate/proposal | AI proposal generation |
-| POST | /api/generate/impact | AI impact statement |
-| POST | /api/applications | Create application |
-| GET | /api/applications | List applications |
-| GET | /api/applications/:id | Application details |
-| PUT | /api/applications/:id | Update status (funded → creates job) |
-| GET | /api/jobs | List job listings |
-| POST | /api/jobs/apply/:id | Apply to job |
-| GET | /api/dashboard/summary | Dashboard data (DB only, no AI) |
+| **Frontend** | Next.js 14 · React 18 | App routing, SSR, UI rendering |
+| **Styling** | Tailwind CSS · Framer Motion | Design system, animations |
+| **Backend** | FastAPI (Python) | REST API, business logic |
+| **ORM** | SQLAlchemy | Database models and queries |
+| **Database** | PostgreSQL via Neon | Persistent data storage |
+| **Auth** | JWT · python-jose · passlib/bcrypt | Secure user authentication |
+| **AI** | Google Gemini 2.0 Flash | Scheme matching, proposal generation, impact writing |
+| **Storage** | Supabase | Document upload and management |
+| **Dev Tools** | Cursor · AI Studio · Google Antigravity | AI-assisted development |
 
-## Architecture
+---
+
+## 6. AI Integration
+
+### Gemini 1.5 Flash — The Core Intelligence Layer
+
+GovBridge integrates **5 specialized AI agents**, each responsible for a distinct part of the user journey:
+
+| Agent | Function | Trigger |
+|---|---|---|
+| **MatchAgent** | Parses business profile → ranks relevant schemes | User button click |
+| **ProposalAgent** | Drafts grant proposals tailored to scheme requirements | User button click |
+| **ImpactAgent** | Writes impact statements for funding applications | User button click |
+| **RecommendationAgent** | Surfaces schemes the user may have overlooked | Auto on signup |
+| **SummaryAgent** | Generates dashboard-level insights | Cached, not real-time |
+
+### Prompt Engineering Philosophy
+
+- **Structured inputs**: Business profiles are serialized into structured JSON before being passed to Gemini, reducing hallucination risk
+- **Role-based prompting**: Each agent is given a specific persona (e.g., "You are an expert Indian government grant consultant...")
+- **Output constraints**: Agents are prompted to return structured responses (e.g., scheme ID + rationale + match score) that can be parsed programmatically
+- **Fallback templates**: Every agent has a hardcoded template response returned if Gemini fails — the UI never breaks
+
+### AI Rate Limiting & Discipline
 
 ```
-GovHack2/
+• AI agents are NEVER called on page load
+• All AI calls are user-button-triggered only
+• Results are cached in-memory per server session
+• Rate limits: 30s cooldown (match), 60s cooldown (proposal/impact)
+• 6-key rotation for Gemini API quota management
+• Template fallback on any API failure
+```
+
+### How AI Studio Helped Build the Frontend
+
+The frontend design system — including color tokens, typography scale, component hierarchy, and animation patterns — was scaffolded with assistance from **Google AI Studio**. AI Studio helped generate:
+- Initial component structures for the dashboard
+- Responsive layout templates for the landing page
+- Framer Motion animation sequences for onboarding flows
+
+### How Google Antigravity Helped Generate the Backend
+
+The backend skeleton — including FastAPI route definitions, SQLAlchemy model relationships, Pydantic schema validation layers, and the seed data structure — was generated and iterated with **Google Antigravity**. This dramatically accelerated development of the 10-route, 18-endpoint API surface.
+
+---
+
+## 7. Folder Structure
+
+```
+GovBridge/
 ├── backend/
-│   ├── agents/          # 5 AI agents (Gemini)
-│   ├── config/          # Settings + Gemini key rotation
-│   ├── models/          # 9 SQLAlchemy models
-│   ├── routes/          # 10 route files, 18 endpoints
-│   ├── schemas/         # Pydantic request/response
-│   ├── seed/            # 15 schemes + seed script
-│   └── main.py          # FastAPI entry
+│   ├── agents/              # 5 Gemini AI agents (match, proposal, impact, etc.)
+│   │   ├── match_agent.py
+│   │   ├── proposal_agent.py
+│   │   ├── impact_agent.py
+│   │   └── ...
+│   ├── config/              # App settings, Gemini 6-key rotation config
+│   │   └── settings.py
+│   ├── models/              # 9 SQLAlchemy ORM models
+│   │   ├── user.py
+│   │   ├── scheme.py
+│   │   ├── application.py
+│   │   └── ...
+│   ├── routes/              # 10 route files, 18 REST endpoints
+│   │   ├── auth.py
+│   │   ├── schemes.py
+│   │   ├── match.py
+│   │   ├── compliance.py
+│   │   ├── documents.py
+│   │   ├── generate.py
+│   │   ├── applications.py
+│   │   └── ...
+│   ├── schemas/             # Pydantic request/response validation schemas
+│   ├── seed/                # Seed script: 15 government schemes + 2 demo users
+│   │   └── seed.py
+│   ├── main.py              # FastAPI app entry point
+│   └── requirements.txt
+│
 ├── frontend/
-│   ├── app/             # Next.js pages
-│   ├── components/      # React components
-│   ├── lib/             # API client + mock data
-│   └── ...config files
+│   ├── app/                 # Next.js 14 App Router pages
+│   │   ├── page.tsx         # Landing page
+│   │   ├── dashboard/       # Dashboard and sub-pages
+│   │   ├── schemes/         # Scheme discovery pages
+│   │   ├── applications/    # Application management
+│   │   └── auth/            # Login / Signup
+│   ├── components/          # 20+ reusable React components
+│   │   ├── ui/              # Base UI components
+│   │   ├── dashboard/       # Dashboard-specific components
+│   │   └── landing/         # Landing page sections
+│   ├── lib/                 # API client, mock data, utilities
+│   │   ├── api.ts           # Typed API client
+│   │   └── mock.ts          # Fallback mock data for dev
+│   ├── public/              # Static assets
+│   ├── .env.local.example   # Environment variable template
+│   └── package.json
+│
+├── .gitignore
 └── README.md
 ```
 
-## AI Call Discipline
+---
 
-- AI agents are **never** called on page load
-- All AI calls are **user-button-triggered only**
-- Results are **cached in-memory** per server session
-- **Rate limiting**: 30s (match), 60s (proposal/impact)
-- **Fallback**: All agents return template data on failure
+## 8. Setup & Installation
 
-## Phases
+### Prerequisites
 
-1. **Design System** — Color tokens, typography, motion, folder structure
-2. **Backend** — Models, routes, agents, seed data, auth
-3. **Frontend Landing** — Hero, workflow, features, storytelling, auth pages
-4. **Frontend Dashboard** — 7 pages, 20+ components, onboarding flow
-5. **Integration** — API wiring, mock fallbacks, final polish
+- **Node.js** 18+ and npm
+- **Python** 3.10+
+- A **Google Gemini API key** (free tier works): [Get one here](https://aistudio.google.com/app/apikey)
+- A **Neon PostgreSQL** database URL: [Create one free](https://neon.tech/)
+- A **Supabase** project URL + key: [Create one free](https://supabase.com/)
+
+---
+
+### Backend Setup
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/Blackhatch0744/GovBridge.git
+cd GovBridge/backend
+
+# 2. Install Python dependencies
+pip install -r requirements.txt
+
+# 3. Configure environment variables
+cp .env.example .env
+```
+
+Edit `.env` and fill in:
+
+```env
+# Database
+DATABASE_URL=postgresql://user:password@your-neon-host/govbridge
+
+# Gemini API Keys (supports up to 6 for rotation)
+GEMINI_API_KEY_1=your_key_here
+GEMINI_API_KEY_2=your_key_here   # Optional — for rate limit rotation
+
+# Supabase
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_KEY=your_service_role_key
+
+# JWT
+SECRET_KEY=your_random_secret_string
+```
+
+```bash
+# 4. Seed the database (15 schemes + 2 demo users)
+python -m backend.seed.seed
+
+# 5. Start the backend server
+uvicorn backend.main:app --reload
+```
+
+Backend runs at: `http://localhost:8000`
+API docs available at: `http://localhost:8000/docs`
+
+---
+
+### Frontend Setup
+
+```bash
+# From the repo root
+cd frontend
+
+# 1. Install dependencies
+npm install
+
+# 2. Configure environment
+cp .env.local.example .env.local
+```
+
+Edit `.env.local`:
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:8000
+```
+
+```bash
+# 3. Start the development server
+npm run dev
+```
+
+Frontend runs at: `http://localhost:3000`
+
+---
+
+### Test Credentials (pre-seeded)
+
+| User | Email | Password | Profile |
+|---|---|---|---|
+| Priya Sharma | priya@kumarfoods.in | `password123` | MSME · Food Processing |
+| Arjun Mehta | arjun@techstart.io | `password123` | Startup · Tech |
+
+> **API Testing:** Use `dev-test-token` as a Bearer token to test any authenticated endpoint without login.
+
+---
+
+## 9. Usage Guide
+
+### Step 1 — Sign Up & Build Your Profile
+
+Navigate to `/auth/signup`. Enter your business name, type (MSME / Startup / NGO), sector, location, and stage. The platform uses this to run an initial AI match automatically.
+
+### Step 2 — Explore Matched Schemes
+
+Your dashboard shows schemes ranked by relevance. Each card displays:
+- Scheme name and sponsoring ministry
+- Match rationale (AI-generated)
+- Maximum grant amount
+- Compliance readiness score
+
+### Step 3 — Check Compliance
+
+Click **"Run Compliance Check"** on any scheme. The platform compares your uploaded documents against the scheme's document requirements and returns a score (0–100%). Missing items are flagged with actionable suggestions.
+
+### Step 4 — Generate a Proposal
+
+Click **"Generate Proposal"** on any matched scheme. Gemini drafts a full grant proposal tailored to that scheme's objectives. You can edit the draft, then attach it to your application.
+
+### Step 5 — Submit & Track Application
+
+Submit your application from the scheme page. Track its lifecycle on the Applications dashboard: Draft → Submitted → Under Review → Funded.
+
+### Example Input / Output
+
+**Input (Business Profile):**
+```json
+{
+  "business_type": "MSME",
+  "sector": "Food Processing",
+  "employees": 24,
+  "annual_revenue": "₹1.2 Cr",
+  "location": "Pune, Maharashtra",
+  "stage": "Growth"
+}
+```
+
+**Output (AI Match Result):**
+```json
+{
+  "matched_schemes": [
+    {
+      "scheme_id": "PLI-FOOD-2024",
+      "name": "PLI Scheme for Food Processing",
+      "match_score": 92,
+      "rationale": "Strong fit based on MSME classification, food processing sector, and Maharashtra eligibility.",
+      "max_grant": "₹10 Cr",
+      "compliance_score": 74
+    }
+  ]
+}
+```
+
+---
+
+## 10. Future Scope & Expansion
+
+> 👉 **This section describes planned future features, not currently implemented functionality.**
+
+### 🚀 Phase 2: Employment & Subsidy Ecosystem
+
+GovBridge has the architectural foundation to evolve into something far larger than a grant discovery tool — a **national employment and subsidy bridge** connecting government datasets, businesses, and job seekers in a single AI-powered ecosystem.
+
+---
+
+#### 🏗️ The Vision: From Funding to Hiring
+
+Once a business receives government funding, the natural next step is **growth** — which means **hiring**. GovBridge plans to close this loop by integrating an employment layer directly into the post-funding workflow.
+
+```
+Business Receives Funding
+         │
+         ▼
+GovBridge Employment Module
+         │
+    ┌────┴────────────────────┐
+    ▼                         ▼
+Post Jobs to Platform    Browse Verified Candidates
+(Startup / SMB / NGO)    (from Govt. Workforce DB)
+         │
+         ▼
+AI-Based Candidate–Job Matching
+(Skills · Location · Sector)
+         │
+         ▼
+Hire → Unlock Government Subsidies & Incentives
+```
+
+---
+
+#### 📋 Planned Features
+
+| Feature | Description |
+|---|---|
+| **Job Posting Module** | Funded businesses can post roles directly on GovBridge |
+| **Government Workforce Integration** | Connect with official employee skill databases (e.g., PMKVY-registered workers) |
+| **AI Candidate Matching** | Gemini-powered matching of candidates to open roles based on skills + location |
+| **Subsidy Unlock Engine** | Automated tracking of hiring milestones that qualify businesses for additional government incentives |
+| **Impact Dashboard** | Real-time analytics on jobs created, subsidies unlocked, and economic impact |
+
+---
+
+#### 💡 Why This Matters — The Win-Win Ecosystem
+
+| Stakeholder | Benefit |
+|---|---|
+| **Businesses** | Hire from a verified government workforce pool; unlock hiring subsidies; reduce recruitment costs |
+| **Government** | Reduce unemployment; ensure funded businesses contribute to national employment goals; measure program impact |
+| **Job Seekers** | Get connected to verified employers; leverage government-backed job placement |
+| **Society** | A self-reinforcing cycle — funding creates jobs, jobs create growth, growth justifies more funding |
+
+> **Example:** A startup that receives ₹50L under Startup India hires 5 PMKVY-certified workers through GovBridge → unlocks an additional ₹5L employment subsidy automatically.
+
+This transforms GovBridge from a point solution into a **policy execution platform** — the connective tissue between government intent and economic reality.
+
+---
+
+#### 📅 Roadmap (Indicative)
+
+| Phase | Timeline | Milestone |
+|---|---|---|
+| **Phase 1** ✅ | Current | AI scheme discovery, compliance, proposal generation |
+| **Phase 2** | Q3 2025 | Employment module MVP, job posting, basic matching |
+| **Phase 3** | Q1 2026 | Government data integration, subsidy unlock automation |
+| **Phase 4** | Q3 2026 | National scale, multi-state rollout, policy API partnerships |
+
+---
+
+## 11. Demo & Screenshots
+
+> 📸 Screenshots and demo video coming soon. Star the repo to get notified!
+
+| Screen | Description |
+|---|---|
+| 🏠 Landing Page | Value proposition, workflow explainer, testimonials |
+| 🔐 Auth Flow | Conversational signup with profile collection |
+| 📊 Dashboard | Matched schemes, compliance scores, quick actions |
+| 🔍 Scheme Explorer | Browse and filter all 15+ schemes |
+| 📝 Proposal Generator | AI drafting interface with edit capabilities |
+| 📂 Applications | Full lifecycle tracker with document uploads |
+
+> **Live Demo:** [Coming Soon — link will be added here]
+
+---
+
+## 12. Contributors
+
+| Contributor | Role |
+|---|---|
+| [@Blackhatch0744](https://github.com/Blackhatch0744) | Founder · Full-Stack · AI Integration |
+| *(Additional contributors — names to be added)* | |
+
+---
+
+## API Reference Summary
+
+| Method | Endpoint | Description | Auth |
+|---|---|---|---|
+| POST | `/api/auth/signup` | Register + auto-match schemes | ❌ |
+| POST | `/api/auth/login` | Login, receive JWT | ❌ |
+| GET | `/api/auth/me` | Current user profile | ✅ |
+| GET | `/api/schemes` | List all schemes | ✅ |
+| GET | `/api/schemes/:id` | Scheme details | ✅ |
+| POST | `/api/match` | AI scheme matching (button-triggered) | ✅ |
+| POST | `/api/compliance` | Compliance check (rule-based) | ✅ |
+| POST | `/api/documents/upload` | Upload supporting document | ✅ |
+| GET | `/api/documents` | List user documents | ✅ |
+| POST | `/api/generate/proposal` | AI grant proposal generation | ✅ |
+| POST | `/api/generate/impact` | AI impact statement generation | ✅ |
+| POST | `/api/applications` | Create application | ✅ |
+| GET | `/api/applications` | List user applications | ✅ |
+| GET | `/api/applications/:id` | Application details | ✅ |
+| PUT | `/api/applications/:id` | Update application status | ✅ |
+| GET | `/api/dashboard/summary` | Dashboard analytics (DB only) | ✅ |
+
+---
+
+## License
+
+This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
+
+---
+
+<div align="center">
+
+**Built with ❤️ for the GOOGLE x DEEPSTATION Hackathon **
+
+*Powered by Google Gemini · FastAPI · Next.js*
+
+[⭐ Star this repo](https://github.com/Blackhatch0744/GovBridge) · [🐛 Report a Bug](https://github.com/Blackhatch0744/GovBridge/issues) · [💡 Request a Feature](https://github.com/Blackhatch0744/GovBridge/issues)
+
+</div>
