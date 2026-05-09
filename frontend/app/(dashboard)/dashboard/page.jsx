@@ -1,174 +1,188 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import FadeUp from '@/components/motion/FadeUp';
 import BlurReveal from '@/components/motion/BlurReveal';
 import CinematicReveal from '@/components/motion/CinematicReveal';
 import SmoothCounter from '@/components/motion/SmoothCounter';
-import MotionWrapper from '@/components/motion/MotionWrapper';
 import { api } from '@/lib/api';
-import { mockDashboard, mockUserMatches, mockApplications } from '@/lib/mockData';
+import { mockSchemes, mockApplications } from '@/lib/mockData';
 
 const ease = [0.16, 1, 0.3, 1];
 
-const entityCards = [
-  { value: 'startup', label: 'Startup', desc: 'Early-stage company' },
-  { value: 'msme', label: 'MSME', desc: 'Micro/Small/Medium enterprise' },
-  { value: 'ngo', label: 'NGO', desc: 'Non-profit organization' },
+const docOptions = [
+  'Aadhaar', 'PAN Card', 'GST Certificate', 'Bank Statement',
+  'Project Report', 'ITR', 'Udyam Registration', 'Business Plan',
+  'DPIIT Certificate', 'Incorporation Certificate', 'Pitch Deck',
+  'Address Proof', 'Caste Certificate', 'Financial Statements',
 ];
 
-function Onboarding() {
-  const router = useRouter();
-  const [step, setStep] = useState(1);
-  const [form, setForm] = useState({ entity_type: '', name: '', industry: '', location: '', revenue: '', years: '', docs: [] });
-  const [loading, setLoading] = useState(false);
+/* ═══════════════════════════════════════════════════
+   DOCUMENT PICKER — Shown every time user visits
+   User selects which docs they have, then we
+   save + recalculate eligibility
+   ═══════════════════════════════════════════════════ */
 
-  const docOptions = ['Aadhaar', 'PAN Card', 'GST Certificate', 'Bank Statement', 'Project Report', 'ITR', 'Udyam Certificate', 'Business Plan'];
-  const toggleDoc = (d) => setForm((p) => ({ ...p, docs: p.docs.includes(d) ? p.docs.filter((x) => x !== d) : [...p.docs, d] }));
+function DocumentPicker({ onComplete }) {
+  const [selectedDocs, setSelectedDocs] = useState([]);
+  const [saving, setSaving] = useState(false);
+  const [loadingExisting, setLoadingExisting] = useState(true);
 
-  const handleMatch = async () => {
-    if (loading) return;
-    setLoading(true);
-    const { error } = await api.schemes.match({
-      entity_type: form.entity_type,
-      location: form.location,
-      industry: form.industry,
-      revenue: parseInt(form.revenue) || 0,
-    });
-    if (error) console.warn('Match fallback:', error);
-    localStorage.setItem('onboarded', 'true');
-    router.push('/schemes');
+  // Load user's previously selected docs
+  useEffect(() => {
+    api.compliance.documents().then(({ data }) => {
+      if (data && data.length > 0) {
+        const existingTypes = data.map((d) => d.document_type);
+        setSelectedDocs(existingTypes.filter((t) => docOptions.includes(t)));
+      }
+      setLoadingExisting(false);
+    }).catch(() => setLoadingExisting(false));
+  }, []);
+
+  const toggleDoc = (d) => {
+    setSelectedDocs((prev) =>
+      prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d]
+    );
   };
+
+  const handleSubmit = async () => {
+    if (saving) return;
+    setSaving(true);
+
+    // Save doc types to backend (clears old docs + compliance)
+    await api.compliance.setTypes(selectedDocs);
+
+    // Store in localStorage for other pages
+    localStorage.setItem('userDocs', JSON.stringify(selectedDocs));
+
+    setSaving(false);
+    onComplete(selectedDocs);
+  };
+
+  if (loadingExisting) {
+    return (
+      <div className="max-w-[640px] mx-auto">
+        <div className="space-y-4">
+          {[1, 2, 3].map((i) => (
+            <motion.div
+              key={i}
+              className="h-12 rounded-xl skeleton"
+              animate={{ scale: [0.99, 1.01, 0.99] }}
+              transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+            />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-[640px] mx-auto">
       <CinematicReveal preset="gentle">
-        <h1 className="text-32 font-light text-text-primary tracking-tight mb-2">Set up your profile</h1>
-        <p className="text-16 text-text-secondary mb-8">Step {step} of 4</p>
+        <h1 className="text-32 font-light text-text-primary tracking-tight mb-2">
+          Update Your Documents
+        </h1>
+        <p className="text-16 text-text-secondary mb-8">
+          Select the documents you currently have — this calculates your scheme eligibility
+        </p>
       </CinematicReveal>
 
-      {/* Animated progress bar */}
-      <div className="flex gap-2 mb-10">
-        {[1, 2, 3, 4].map((s) => (
-          <motion.div
-            key={s}
-            className="flex-1 h-1.5 rounded-full"
-            animate={{ backgroundColor: s <= step ? '#111111' : '#E8E2DA' }}
-            transition={{ duration: 0.4, ease }}
-          />
-        ))}
-      </div>
-
-      {step === 1 && (
-        <CinematicReveal>
-          <p className="text-18 font-medium text-text-primary mb-6">What type of entity are you?</p>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {entityCards.map((e, i) => (
-              <MotionWrapper key={e.value} tiltMax={3} liftAmount={-4}>
+      <BlurReveal blur={6} distance={20}>
+        <div className="p-6 rounded-2xl mb-6" style={{ backgroundColor: '#FFFFFF', border: '1px solid #E8E2DA' }}>
+          <p className="text-14 font-semibold text-text-primary mb-4">Which documents do you have?</p>
+          <div className="flex flex-wrap gap-2 mb-6">
+            {docOptions.map((d) => {
+              const isSelected = selectedDocs.includes(d);
+              return (
                 <button
-                  onClick={() => { setForm((p) => ({ ...p, entity_type: e.value })); setStep(2); }}
-                  className="p-6 rounded-2xl text-left w-full transition-colors duration-300"
+                  key={d}
+                  type="button"
+                  onClick={() => toggleDoc(d)}
+                  className="text-14 px-4 py-2 rounded-full transition-all duration-200 cursor-pointer"
                   style={{
-                    backgroundColor: form.entity_type === e.value ? '#111111' : '#FFFFFF',
-                    color: form.entity_type === e.value ? '#FFFFFF' : '#0A0A0A',
-                    border: '1px solid #E8E2DA',
+                    backgroundColor: isSelected ? '#111111' : '#F5F2EE',
+                    color: isSelected ? '#FFFFFF' : '#6B6560',
+                    border: isSelected ? '1px solid #111111' : '1px solid #E8E2DA',
                   }}
                 >
-                  <p className="text-18 font-semibold mb-1">{e.label}</p>
-                  <p className="text-14 opacity-60">{e.desc}</p>
+                  {isSelected ? '✓ ' : ''}{d}
                 </button>
-              </MotionWrapper>
-            ))}
+              );
+            })}
           </div>
-        </CinematicReveal>
-      )}
 
-      {step === 2 && (
-        <BlurReveal blur={6} distance={20}>
-          <div className="space-y-4">
-            <div><label className="block text-14 text-text-secondary mb-2">Business Name</label><input className="input-field" value={form.name} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))} placeholder="Kumar Foods" /></div>
-            <div className="grid grid-cols-2 gap-4">
-              <div><label className="block text-14 text-text-secondary mb-2">Industry</label><input className="input-field" value={form.industry} onChange={(e) => setForm((p) => ({ ...p, industry: e.target.value }))} placeholder="Food" /></div>
-              <div><label className="block text-14 text-text-secondary mb-2">Location</label><input className="input-field" value={form.location} onChange={(e) => setForm((p) => ({ ...p, location: e.target.value }))} placeholder="Chennai" /></div>
-            </div>
-          </div>
-          <div className="flex gap-3 mt-8">
-            <button onClick={() => setStep(1)} className="btn-secondary py-3 px-6 text-14">Back</button>
-            <button onClick={() => setStep(3)} className="btn-primary py-3 px-6 text-14">Next</button>
-          </div>
-        </BlurReveal>
-      )}
-
-      {step === 3 && (
-        <BlurReveal blur={6} distance={20}>
-          <div className="space-y-4">
-            <div><label className="block text-14 text-text-secondary mb-2">Annual Revenue</label><select className="input-field" value={form.revenue} onChange={(e) => setForm((p) => ({ ...p, revenue: e.target.value }))} style={{ cursor: 'pointer' }}><option value="">Select range</option><option value="100000">Under ₹1 Lakh</option><option value="500000">₹1L – ₹5L</option><option value="1000000">₹5L – ₹10L</option><option value="2500000">₹10L – ₹25L</option><option value="5000000">₹25L+</option></select></div>
-            <div><label className="block text-14 text-text-secondary mb-2">Years in Operation</label><select className="input-field" value={form.years} onChange={(e) => setForm((p) => ({ ...p, years: e.target.value }))} style={{ cursor: 'pointer' }}><option value="">Select</option><option value="0">Less than 1</option><option value="1">1-3 years</option><option value="3">3-5 years</option><option value="5">5+ years</option></select></div>
-          </div>
-          <div className="flex gap-3 mt-8">
-            <button onClick={() => setStep(2)} className="btn-secondary py-3 px-6 text-14">Back</button>
-            <button onClick={() => setStep(4)} className="btn-primary py-3 px-6 text-14">Next</button>
-          </div>
-        </BlurReveal>
-      )}
-
-      {step === 4 && (
-        <BlurReveal blur={6} distance={20}>
-          <p className="text-18 font-medium text-text-primary mb-4">Which documents do you have?</p>
-          <div className="flex flex-wrap gap-2 mb-8">
-            {docOptions.map((d) => (
-              <motion.button
-                key={d}
-                onClick={() => toggleDoc(d)}
-                className="text-14 px-4 py-2 rounded-full"
-                style={{
-                  backgroundColor: form.docs.includes(d) ? '#111111' : '#F5F2EE',
-                  color: form.docs.includes(d) ? '#FFFFFF' : '#6B6560',
-                  border: form.docs.includes(d) ? '1px solid #111111' : '1px solid #E8E2DA',
-                }}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.93 }}
-                transition={{ duration: 0.2 }}
-              >
-                {form.docs.includes(d) ? '✓ ' : ''}{d}
-              </motion.button>
-            ))}
-          </div>
-          <div className="flex gap-3">
-            <button onClick={() => setStep(3)} className="btn-secondary py-3 px-6 text-14">Back</button>
-            <motion.button
-              onClick={handleMatch}
-              disabled={loading}
-              className="btn-primary py-4 px-8 text-16 flex-1"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+          <div className="flex items-center justify-between">
+            <span className="text-14 text-text-secondary">
+              {selectedDocs.length} document{selectedDocs.length !== 1 ? 's' : ''} selected
+            </span>
+            <button
+              type="button"
+              onClick={handleSubmit}
+              disabled={saving}
+              className="btn-primary py-3 px-8 text-14 cursor-pointer"
             >
-              {loading ? <span className="flex items-center justify-center gap-2"><span className="spinner" /> Finding Schemes...</span> : 'Find My Schemes →'}
-            </motion.button>
+              {saving ? (
+                <span className="flex items-center gap-2"><span className="spinner" /> Calculating...</span>
+              ) : (
+                'Calculate Eligibility →'
+              )}
+            </button>
           </div>
-        </BlurReveal>
-      )}
+        </div>
+      </BlurReveal>
     </div>
   );
 }
 
-function DashboardSummary() {
+/* ═══════════════════════════════════════════════════
+   DASHBOARD SUMMARY — Shows after doc selection
+   All values start from 0, no mock fallback
+   ═══════════════════════════════════════════════════ */
+
+function DashboardSummary({ userDocs }) {
   const [data, setData] = useState(null);
-  const [loaded, setLoaded] = useState(false);
+  const [schemes, setSchemes] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (loaded) return;
-    setLoaded(true);
-    api.dashboard.summary().then(({ data: d }) => {
-      if (d && d.top_matches && d.top_matches.length > 0) setData(d);
-      else setData(mockDashboard);
-    });
-  }, [loaded]);
+    Promise.all([
+      api.dashboard.summary(),
+      api.schemes.list(),
+    ]).then(([dashRes, schemesRes]) => {
+      if (dashRes.data && dashRes.data.top_matches && dashRes.data.top_matches.length > 0) {
+        setData(dashRes.data);
+      }
+      if (schemesRes.data && schemesRes.data.length > 0) {
+        setSchemes(schemesRes.data);
+      }
+      setLoading(false);
+    }).catch(() => setLoading(false));
+  }, []);
 
-  const dash = data || mockDashboard;
-  const matches = dash.top_matches || mockUserMatches;
+  // No mock fallback — use empty defaults (0 values) while loading
+  const matches = data?.top_matches || [];
+  const criticalGaps = data?.critical_gaps || [];
+
+  // Build scheme lookup map
+  const schemeMap = {};
+  (schemes || []).forEach((s) => { schemeMap[s.id] = s; });
+  mockSchemes.forEach((s) => { if (!schemeMap[s.id]) schemeMap[s.id] = s; });
+
+  // Compute document-based eligibility for each match
+  const matchesWithDocEligibility = matches.map((m) => {
+    const scheme = schemeMap[m.scheme_id];
+    const requiredDocs = scheme?.required_documents || scheme?.required_docs || [];
+    const totalRequired = requiredDocs.length;
+    const missingCount = (m.missing_documents || []).length;
+    const docsOwned = totalRequired - missingCount;
+    const docEligibility = totalRequired > 0 ? Math.round((docsOwned / totalRequired) * 100) : 0;
+    return { ...m, docEligibility };
+  });
+
+  // Compute stats from document-based eligibility (0 if no data yet)
+  const eligScores = matchesWithDocEligibility.map((m) => m.docEligibility);
+  const topDocScore = eligScores.length > 0 ? Math.max(...eligScores) : 0;
+  const avgDocEligibility = eligScores.length > 0 ? Math.round((eligScores.reduce((a, b) => a + b, 0) / eligScores.length) * 10) / 10 : 0;
 
   return (
     <div>
@@ -180,9 +194,9 @@ function DashboardSummary() {
       {/* Stats — animated counters with depth */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
         {[
-          { label: 'Top Match Score', value: matches[0]?.eligibility_score || 0, suffix: '%', color: '#1A5C38' },
-          { label: 'Avg Eligibility', value: dash.avg_eligibility || 0, suffix: '%', color: '#0A0A0A', decimals: 1 },
-          { label: 'Critical Doc Gaps', value: (dash.critical_gaps || []).length, suffix: '', color: '#8B1A1A' },
+          { label: 'Top Match Score', value: topDocScore, suffix: '%', color: topDocScore >= 75 ? '#1A5C38' : topDocScore >= 50 ? '#92600A' : '#8B1A1A' },
+          { label: 'Avg Eligibility', value: avgDocEligibility, suffix: '%', color: '#0A0A0A', decimals: 1 },
+          { label: 'Critical Doc Gaps', value: criticalGaps.length, suffix: '', color: '#8B1A1A' },
         ].map((s, i) => (
           <BlurReveal key={i} delay={i * 0.1} blur={6} distance={20}>
             <motion.div
@@ -204,40 +218,64 @@ function DashboardSummary() {
       <BlurReveal delay={0.2} blur={4} distance={15}>
         <h2 className="text-18 font-medium text-text-primary mb-4">Top Matched Schemes</h2>
       </BlurReveal>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
-        {matches.slice(0, 3).map((m, i) => (
-          <BlurReveal key={i} delay={0.25 + i * 0.08} blur={6} distance={20}>
-            <motion.div
-              className="p-5 rounded-2xl"
-              style={{ backgroundColor: '#FFFFFF', border: '1px solid #E8E2DA' }}
-              whileHover={{ y: -3, boxShadow: '0 8px 30px rgba(0,0,0,0.06)' }}
-              transition={{ duration: 0.3, ease }}
-            >
-              <div className="flex items-center justify-between mb-3">
-                <p className="text-14 font-semibold text-text-primary">{m.scheme_name}</p>
-                <span className="text-14 font-mono font-semibold" style={{ color: '#1A5C38' }}>{m.eligibility_score}%</span>
-              </div>
-              <div className="w-full h-1.5 rounded-full mb-3" style={{ backgroundColor: '#F5F2EE' }}>
-                <motion.div
-                  className="h-full rounded-full"
-                  style={{ backgroundColor: '#1A5C38' }}
-                  initial={{ width: 0 }}
-                  whileInView={{ width: `${m.readiness_score || 0}%` }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 1, delay: 0.3 + i * 0.1, ease }}
-                />
-              </div>
-              {(m.missing_documents || []).length > 0 && (
-                <span className="text-12 px-2.5 py-1 rounded-full" style={{ backgroundColor: '#FFF8E1', color: '#92600A' }}>
-                  {m.missing_documents.length} docs missing
-                </span>
-              )}
-            </motion.div>
-          </BlurReveal>
-        ))}
-      </div>
 
-      {/* Recent Applications — staggered slide-in from right */}
+      {loading ? (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
+          {[1, 2, 3].map((i) => (
+            <motion.div
+              key={i}
+              className="h-32 rounded-2xl skeleton"
+              animate={{ scale: [0.99, 1.01, 0.99] }}
+              transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+            />
+          ))}
+        </div>
+      ) : matchesWithDocEligibility.length === 0 ? (
+        <BlurReveal delay={0.25} blur={4} distance={15}>
+          <div className="text-center py-12 px-8 rounded-2xl mb-10" style={{ backgroundColor: '#FFFFFF', border: '1px solid #E8E2DA' }}>
+            <p className="text-18 text-text-secondary">No matched schemes yet</p>
+            <p className="text-14 text-text-secondary mt-2">Run a scheme match from the Schemes page to see results here</p>
+          </div>
+        </BlurReveal>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
+          {matchesWithDocEligibility.slice(0, 3).map((m, i) => {
+            const barColor = m.docEligibility >= 75 ? '#1A5C38' : m.docEligibility >= 50 ? '#92600A' : '#8B1A1A';
+            return (
+              <BlurReveal key={i} delay={0.25 + i * 0.08} blur={6} distance={20}>
+                <motion.div
+                  className="p-5 rounded-2xl"
+                  style={{ backgroundColor: '#FFFFFF', border: '1px solid #E8E2DA' }}
+                  whileHover={{ y: -3, boxShadow: '0 8px 30px rgba(0,0,0,0.06)' }}
+                  transition={{ duration: 0.3, ease }}
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-14 font-semibold text-text-primary">{m.scheme_name}</p>
+                    <span className="text-14 font-mono font-semibold" style={{ color: barColor }}>{m.docEligibility}%</span>
+                  </div>
+                  <div className="w-full h-1.5 rounded-full mb-3" style={{ backgroundColor: '#F5F2EE' }}>
+                    <motion.div
+                      className="h-full rounded-full"
+                      style={{ backgroundColor: barColor }}
+                      initial={{ width: 0 }}
+                      whileInView={{ width: `${m.docEligibility}%` }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 1, delay: 0.3 + i * 0.1, ease }}
+                    />
+                  </div>
+                  {(m.missing_documents || []).length > 0 && (
+                    <span className="text-12 px-2.5 py-1 rounded-full" style={{ backgroundColor: '#FFF8E1', color: '#92600A' }}>
+                      {m.missing_documents.length} docs missing
+                    </span>
+                  )}
+                </motion.div>
+              </BlurReveal>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Recent Applications */}
       <BlurReveal delay={0.3} blur={4} distance={15}>
         <h2 className="text-18 font-medium text-text-primary mb-4">Recent Applications</h2>
       </BlurReveal>
@@ -268,8 +306,22 @@ function DashboardSummary() {
   );
 }
 
+/* ═══════════════════════════════════════════════════
+   DASHBOARD PAGE — Always asks for docs first
+   ═══════════════════════════════════════════════════ */
+
 export default function DashboardPage() {
-  const [onboarded, setOnboarded] = useState(false);
-  useEffect(() => { setOnboarded(localStorage.getItem('onboarded') === 'true'); }, []);
-  return onboarded ? <DashboardSummary /> : <Onboarding />;
+  const [docsConfirmed, setDocsConfirmed] = useState(false);
+  const [userDocs, setUserDocs] = useState([]);
+
+  const handleDocsComplete = (docs) => {
+    setUserDocs(docs);
+    setDocsConfirmed(true);
+  };
+
+  return docsConfirmed ? (
+    <DashboardSummary userDocs={userDocs} />
+  ) : (
+    <DocumentPicker onComplete={handleDocsComplete} />
+  );
 }

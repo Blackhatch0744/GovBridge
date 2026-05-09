@@ -5,6 +5,7 @@ from backend.database import get_db
 from backend.models.scheme import Scheme
 from backend.models.user_match import UserMatch
 from backend.models.user_compliance import UserCompliance
+from backend.models.document import Document
 from backend.agents.scheme_matcher import match_schemes
 from backend.agents.compliance_checker import check_compliance
 from backend.schemas.scheme import MatchRequest
@@ -73,6 +74,10 @@ def run_match(body: MatchRequest, db: Session = Depends(get_db), current_user=De
     db.query(UserMatch).filter(UserMatch.user_id == user_id).delete()
     db.query(UserCompliance).filter(UserCompliance.user_id == user_id).delete()
 
+    # Fetch user's actually uploaded document types
+    user_docs = db.query(Document).filter(Document.user_id == user_id).all()
+    uploaded_types = [d.document_type for d in user_docs]
+
     top5 = results[:5]
     for r in top5:
         db.add(UserMatch(
@@ -83,7 +88,7 @@ def run_match(body: MatchRequest, db: Session = Depends(get_db), current_user=De
         ))
         scheme = db.query(Scheme).filter(Scheme.id == r["scheme_id"]).first()
         if scheme:
-            comp = check_compliance(scheme.required_documents or [], [])
+            comp = check_compliance(scheme.required_documents or [], uploaded_types)
             db.add(UserCompliance(
                 user_id=user_id,
                 scheme_id=r["scheme_id"],

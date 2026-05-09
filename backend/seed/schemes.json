@@ -8,7 +8,7 @@
     "industries": ["manufacturing", "service", "food", "textile", "handicraft"],
     "funding_min": 100000,
     "funding_max": 2500000,
-    "required_documents": ["Aadhaar Card", "PAN Card", "Project Report", "EDP Certificate", "Educational Certificate", "Caste Certificate"],
+    "required_documents": ["Aadhaar", "PAN Card", "Project Report", "EDP Certificate", "Educational Certificate", "Caste Certificate"],
     "deadline": "2026-12-31",
     "source_url": "https://www.kviconline.gov.in/pmegp",
     "tags": ["employment", "micro-enterprise", "subsidy"]
@@ -22,7 +22,7 @@
     "industries": ["manufacturing", "trading", "service", "food", "textile"],
     "funding_min": 50000,
     "funding_max": 1000000,
-    "required_documents": ["Aadhaar Card", "PAN Card", "Business Plan", "Bank Statement", "Address Proof"],
+    "required_documents": ["Aadhaar", "PAN Card", "Business Plan", "Bank Statement", "Address Proof"],
     "deadline": "2026-12-31",
     "source_url": "https://www.mudra.org.in",
     "tags": ["micro-finance", "loan", "small-business"]
@@ -64,7 +64,7 @@
     "industries": ["manufacturing", "service", "trading", "food", "handicraft"],
     "funding_min": 1000000,
     "funding_max": 10000000,
-    "required_documents": ["Aadhaar Card", "PAN Card", "Caste Certificate", "Business Plan", "Address Proof", "ITR"],
+    "required_documents": ["Aadhaar", "PAN Card", "Caste Certificate", "Business Plan", "Address Proof", "ITR"],
     "deadline": "2026-12-31",
     "source_url": "https://www.standupmitra.in",
     "tags": ["women", "sc-st", "greenfield"]
@@ -92,7 +92,7 @@
     "industries": ["food", "retail", "service", "trading"],
     "funding_min": 10000,
     "funding_max": 50000,
-    "required_documents": ["Aadhaar Card", "Vendor Certificate", "Bank Account Details", "Photograph", "Mobile Number Proof"],
+    "required_documents": ["Aadhaar", "Vendor Certificate", "Bank Account Details", "Photograph", "Mobile Number Proof"],
     "deadline": "2026-12-31",
     "source_url": "https://pmsvanidhi.mohua.gov.in",
     "tags": ["street-vendor", "micro-credit", "urban"]
@@ -106,7 +106,7 @@
     "industries": ["service", "manufacturing", "handicraft", "food", "textile"],
     "funding_min": 200000,
     "funding_max": 2000000,
-    "required_documents": ["Aadhaar Card", "BPL Certificate", "Bank Account", "Residence Proof", "Skill Certificate"],
+    "required_documents": ["Aadhaar", "BPL Certificate", "Bank Account", "Residence Proof", "Skill Certificate"],
     "deadline": "2026-12-31",
     "source_url": "https://nulm.gov.in",
     "tags": ["urban-poor", "livelihood", "training"]
@@ -120,7 +120,7 @@
     "industries": ["manufacturing", "service", "trading", "food", "tech"],
     "funding_min": 100000,
     "funding_max": 1000000,
-    "required_documents": ["Aadhaar Card", "Educational Certificate", "Age Proof", "Income Certificate", "Project Report"],
+    "required_documents": ["Aadhaar", "Educational Certificate", "Age Proof", "Income Certificate", "Project Report"],
     "deadline": "2026-12-31",
     "source_url": "https://msme.gov.in/pmry",
     "tags": ["youth", "self-employment", "rozgar"]
@@ -148,7 +148,7 @@
     "industries": ["food", "textile", "handicraft", "service", "retail", "tech"],
     "funding_min": 500000,
     "funding_max": 5000000,
-    "required_documents": ["Aadhaar Card", "PAN Card", "Business Registration", "Bank Statement", "Business Plan"],
+    "required_documents": ["Aadhaar", "PAN Card", "Business Registration", "Bank Statement", "Business Plan"],
     "deadline": "2026-12-31",
     "source_url": "https://wep.gov.in",
     "tags": ["women", "entrepreneurship", "mentoring"]

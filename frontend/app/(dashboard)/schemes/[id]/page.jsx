@@ -18,6 +18,8 @@ export default function SchemeDetailPage() {
   const params = useParams();
   const [scheme, setScheme] = useState(null);
   const [match, setMatch] = useState(null);
+  const [analysis, setAnalysis] = useState('');
+  const [analyzing, setAnalyzing] = useState(false);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
@@ -28,7 +30,19 @@ export default function SchemeDetailPage() {
     });
     api.dashboard.summary().then(({ data }) => {
       const m = data?.top_matches?.find((m) => String(m.scheme_id) === String(params.id));
-      setMatch(m || mockUserMatches.find((m) => m.scheme_id === params.id));
+      const foundMatch = m || mockUserMatches.find((m) => String(m.scheme_id) === String(params.id));
+      setMatch(foundMatch);
+
+      if (foundMatch && foundMatch.reasoning) {
+        setAnalysis(foundMatch.reasoning);
+      } else {
+        setAnalyzing(true);
+        api.schemes.analyze(params.id).then((res) => {
+          if (res.data) setAnalysis(res.data.analysis);
+          else setAnalysis('Could not generate AI analysis at this time.');
+          setAnalyzing(false);
+        });
+      }
     });
   }, [loaded, params.id]);
 
@@ -47,6 +61,11 @@ export default function SchemeDetailPage() {
 
   const required = scheme.required_documents || scheme.required_docs || [];
   const missing = match?.missing_documents || [];
+
+  // Compute document-based eligibility: (docs the user HAS / total required) * 100
+  const totalRequired = required.length;
+  const docsOwned = totalRequired - missing.length;
+  const docEligibility = totalRequired > 0 ? Math.round((docsOwned / totalRequired) * 100) : 0;
 
   return (
     <div>
@@ -102,14 +121,21 @@ export default function SchemeDetailPage() {
           </BlurReveal>
 
           {/* AI Analysis */}
-          {match && (
-            <BlurReveal delay={0.25} blur={6} distance={20}>
-              <div className="p-6 rounded-2xl" style={{ backgroundColor: '#F5F2EE', border: '1px solid #E8E2DA' }}>
-                <h3 className="text-16 font-semibold text-text-primary mb-2">AI Analysis</h3>
-                <p className="text-14 text-text-secondary leading-relaxed">{match.reasoning}</p>
+          <BlurReveal delay={0.25} blur={6} distance={20}>
+            <div className="p-6 rounded-2xl" style={{ backgroundColor: '#F5F2EE', border: '1px solid #E8E2DA' }}>
+              <h3 className="text-16 font-semibold text-text-primary mb-2">AI Analysis</h3>
+              <div className="text-14 text-text-secondary leading-relaxed">
+                {analyzing ? (
+                  <p className="flex items-center gap-2">
+                    <span className="spinner" style={{ borderColor: '#6B6560', borderTopColor: 'transparent' }} /> 
+                    Generating analysis...
+                  </p>
+                ) : (
+                  <p>{analysis}</p>
+                )}
               </div>
-            </BlurReveal>
-          )}
+            </div>
+          </BlurReveal>
         </div>
 
         {/* Sticky side panel */}
@@ -122,7 +148,7 @@ export default function SchemeDetailPage() {
                 whileHover={{ boxShadow: '0 8px 30px rgba(0,0,0,0.06)' }}
                 transition={{ duration: 0.3, ease }}
               >
-                <ReadinessRing score={match?.readiness_score || 0} size={140} />
+                <ReadinessRing score={match ? docEligibility : 0} size={140} />
                 <div className="mt-4 mb-2">
                   <p className="text-14 text-text-secondary">Funding Range</p>
                   <p className="text-24 font-mono font-medium text-text-primary mt-1">

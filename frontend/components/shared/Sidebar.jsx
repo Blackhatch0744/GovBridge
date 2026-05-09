@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -26,6 +27,17 @@ const links = [
 export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
+  const [userName, setUserName] = useState('User');
+  const [entityType, setEntityType] = useState('');
+
+  // Read user info from localStorage only after hydration
+  useEffect(() => {
+    try {
+      const u = JSON.parse(localStorage.getItem('user') || '{}');
+      if (u.name) setUserName(u.name.split(' ')[0]);
+      if (u.entity_type) setEntityType(u.entity_type.toUpperCase());
+    } catch (e) {}
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -33,16 +45,6 @@ export default function Sidebar() {
     localStorage.removeItem('onboarded');
     router.push('/login');
   };
-
-  let userName = 'User';
-  let entityType = '';
-  if (typeof window !== 'undefined') {
-    try {
-      const u = JSON.parse(localStorage.getItem('user') || '{}');
-      if (u.name) userName = u.name.split(' ')[0];
-      if (u.entity_type) entityType = u.entity_type.toUpperCase();
-    } catch (e) {}
-  }
 
   return (
     <motion.aside
@@ -121,7 +123,7 @@ export default function Sidebar() {
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5, delay: 0.3, ease }}
       >
-        <div className="flex items-center gap-3">
+        <Link href="/profile" className="flex items-center gap-3 cursor-pointer rounded-xl p-1 -m-1 transition-colors hover:bg-[#F5F2EE]">
           <motion.div
             className="w-8 h-8 rounded-full flex items-center justify-center text-12 font-semibold text-white"
             style={{ backgroundColor: '#D4C5B0' }}
@@ -134,7 +136,7 @@ export default function Sidebar() {
             <p className="text-14 font-medium text-text-primary">{userName}</p>
             <p className="text-12 text-text-secondary">{entityType}</p>
           </div>
-        </div>
+        </Link>
         <motion.button
           onClick={handleLogout}
           className="flex items-center gap-2 text-14 text-text-secondary hover:text-text-primary transition-colors w-full px-0"

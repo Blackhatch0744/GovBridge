@@ -48,6 +48,6 @@ export const mockUserProfile = {
 
 export const documentTypes = [
   "Aadhaar", "PAN Card", "GST Certificate", "Bank Statement",
-  "Project Report", "ITR", "MSME Registration", "Udyam Certificate",
+  "Project Report", "ITR", "MSME Registration", "Udyam Registration",
   "Business Plan", "Balance Sheet",
 ];

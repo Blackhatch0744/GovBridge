@@ -45,6 +45,7 @@ export const api = {
     login: (body) => post('/api/auth/login', body),
     signup: (body) => post('/api/auth/signup', body),
     me: () => get('/api/auth/me'),
+    updateProfile: (body) => put('/api/auth/profile', body),
   },
   dashboard: {
     summary: () => get('/api/dashboard/summary'),
@@ -53,11 +54,14 @@ export const api = {
     list: () => get('/api/schemes'),
     get: (id) => get(`/api/schemes/${id}`),
     match: (body) => post('/api/match', body),
+    analyze: (id) => get(`/api/schemes/analyze/${id}`),
   },
   compliance: {
     check: (body) => post('/api/compliance', body),
     upload: (form) => upload('/api/documents/upload', form),
     documents: () => get('/api/documents'),
+    setTypes: (docTypes) => post('/api/documents/set-types', { document_types: docTypes }),
+    delete: (id) => request('DELETE', `/api/documents/${id}`),
   },
   proposals: {
     generate: (body) => post('/api/generate/proposal', body),

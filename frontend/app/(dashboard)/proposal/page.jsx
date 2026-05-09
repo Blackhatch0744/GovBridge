@@ -7,7 +7,7 @@ import BlurReveal from '@/components/motion/BlurReveal';
 import ProposalPreview from '@/components/proposal/ProposalPreview';
 import ImpactCard from '@/components/proposal/ImpactCard';
 import { api } from '@/lib/api';
-import { mockSchemes, documentTypes } from '@/lib/mockData';
+import { mockSchemes } from '@/lib/mockData';
 
 const ease = [0.16, 1, 0.3, 1];
 
@@ -18,6 +18,7 @@ export default function ProposalPage() {
   const [impactLoading, setImpactLoading] = useState(false);
   const [schemes, setSchemes] = useState(mockSchemes);
   const [schemeId, setSchemeId] = useState('');
+  const [userDocs, setUserDocs] = useState([]);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
@@ -27,12 +28,18 @@ export default function ProposalPage() {
       if (data && data.length > 0) { setSchemes(data); setSchemeId(String(data[0].id)); }
       else setSchemeId(mockSchemes[0]?.id || '1');
     });
+    // Fetch user's actual uploaded documents
+    api.compliance.documents().then(({ data }) => {
+      if (data && data.length > 0) setUserDocs(data);
+    });
   }, [loaded]);
 
   const handleGenerate = async () => {
     if (loading || proposal) return;
     setLoading(true);
-    const { data, error } = await api.proposals.generate({ scheme_id: parseInt(schemeId), document_ids: [] });
+    // Pass real document IDs to the backend
+    const docIds = userDocs.map((d) => d.id);
+    const { data, error } = await api.proposals.generate({ scheme_id: parseInt(schemeId), document_ids: docIds });
     if (data) setProposal(data);
     else {
       setProposal({
@@ -57,7 +64,7 @@ export default function ProposalPage() {
       scheme_name: scheme?.name || 'PMEGP', funding_amount: scheme?.funding_max || 2500000,
     });
     if (data) setImpact(data.impact_statement);
-    else setImpact('This enterprise is projected to create 5-10 direct employment opportunities in the local community. The investment will stimulate neighbourhood commerce and support ancillary businesses. Over 12 months, this initiative could contribute to a 15-20% increase in local economic output.');
+    else setImpact('This enterprise is projected to create 5-10 direct employment opportunities in the local community. The investment will stimulate neighbourhood commerce and support ancillary businesses.');
     setImpactLoading(false);
   };
 
@@ -88,21 +95,29 @@ export default function ProposalPage() {
               </div>
 
               <div>
-                <label className="block text-12 text-text-secondary mb-2 font-medium uppercase tracking-wider">Documents</label>
-                <div className="flex flex-wrap gap-2">
-                  {documentTypes.slice(0, 6).map((d, i) => (
-                    <motion.span
-                      key={d}
-                      className="text-12 px-3 py-1.5 rounded-full"
-                      style={{ backgroundColor: '#F5F2EE', color: '#6B6560' }}
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: i * 0.04 + 0.2, duration: 0.3, ease }}
-                    >
-                      ✓ {d}
-                    </motion.span>
-                  ))}
-                </div>
+                <label className="block text-12 text-text-secondary mb-2 font-medium uppercase tracking-wider">
+                  Your Documents ({userDocs.length})
+                </label>
+                {userDocs.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {userDocs.map((d, i) => (
+                      <motion.span
+                        key={d.id || i}
+                        className="text-12 px-3 py-1.5 rounded-full"
+                        style={{ backgroundColor: '#E8F5E9', color: '#1A5C38' }}
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: i * 0.04 + 0.2, duration: 0.3, ease }}
+                      >
+                        ✓ {d.document_type}
+                      </motion.span>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-12 text-text-secondary px-3 py-2 rounded-xl" style={{ backgroundColor: '#FFF8E1' }}>
+                    No documents uploaded. Visit your Profile to add documents for better proposals.
+                  </p>
+                )}
               </div>
 
               <motion.button
@@ -142,3 +157,4 @@ export default function ProposalPage() {
     </div>
   );
 }
+

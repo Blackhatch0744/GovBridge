@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 
 /* ═══════════════════════════════════════════════════
    SMOOTH COUNTER — Performance Optimized
    Uses requestAnimationFrame (not setInterval).
    IntersectionObserver triggers once per viewport.
-   rootMargin: -10% for seamless trigger.
+   Re-animates when `to` value changes.
    ═══════════════════════════════════════════════════ */
 
 export default function SmoothCounter({
@@ -22,51 +22,68 @@ export default function SmoothCounter({
 }) {
   const ref = useRef(null);
   const [value, setValue] = useState(from);
-  const hasAnimatedRef = useRef(false);
+  const prevTo = useRef(to);
+  const animFrameRef = useRef(null);
+  const timeoutRef = useRef(null);
   const [blurAmount, setBlurAmount] = useState(blur ? 6 : 0);
 
+  const runAnimation = useCallback((startVal, endVal, animDelay = 0) => {
+    if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+
+    timeoutRef.current = setTimeout(() => {
+      const start = performance.now();
+      const dur = duration * 1000;
+
+      const animate = (now) => {
+        const elapsed = now - start;
+        const progress = Math.min(elapsed / dur, 1);
+
+        /* Quintic ease-out for premium deceleration */
+        const t = 1 - Math.pow(1 - progress, 4);
+
+        const current = startVal + (endVal - startVal) * t;
+        setValue(
+          decimals > 0
+            ? parseFloat(current.toFixed(decimals))
+            : Math.round(current)
+        );
+
+        /* Blur reduces as counter progresses */
+        if (blur) {
+          setBlurAmount(6 * (1 - progress));
+        }
+
+        if (progress < 1) {
+          animFrameRef.current = requestAnimationFrame(animate);
+        }
+      };
+
+      animFrameRef.current = requestAnimationFrame(animate);
+    }, animDelay * 1000);
+  }, [duration, decimals, blur]);
+
+  // Re-animate when `to` changes
+  useEffect(() => {
+    if (prevTo.current !== to) {
+      runAnimation(prevTo.current, to, 0);
+      prevTo.current = to;
+    }
+  }, [to, runAnimation]);
+
+  // Initial animation on scroll into view
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
 
+    let hasAnimated = false;
+
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting && !hasAnimatedRef.current) {
-          hasAnimatedRef.current = true;
+        if (entry.isIntersecting && !hasAnimated) {
+          hasAnimated = true;
           observer.disconnect();
-
-          const timeout = setTimeout(() => {
-            const start = performance.now();
-            const dur = duration * 1000;
-
-            const animate = (now) => {
-              const elapsed = now - start;
-              const progress = Math.min(elapsed / dur, 1);
-
-              /* Quintic ease-out for premium deceleration */
-              const t = 1 - Math.pow(1 - progress, 4);
-
-              const current = from + (to - from) * t;
-              setValue(
-                decimals > 0
-                  ? parseFloat(current.toFixed(decimals))
-                  : Math.round(current)
-              );
-
-              /* Blur reduces as counter progresses */
-              if (blur) {
-                setBlurAmount(6 * (1 - progress));
-              }
-
-              if (progress < 1) {
-                requestAnimationFrame(animate);
-              }
-            };
-
-            requestAnimationFrame(animate);
-          }, delay * 1000);
-
-          return () => clearTimeout(timeout);
+          runAnimation(from, to, delay);
         }
       },
       {
@@ -76,8 +93,12 @@ export default function SmoothCounter({
     );
 
     observer.observe(el);
-    return () => observer.disconnect();
-  }, [from, to, duration, decimals, blur, delay]);
+    return () => {
+      observer.disconnect();
+      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, [from, to, delay, runAnimation]);
 
   return (
     <span
@@ -96,3 +117,4 @@ export default function SmoothCounter({
     </span>
   );
 }
+

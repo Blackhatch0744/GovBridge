@@ -13,7 +13,7 @@ from backend.models.user_match import UserMatch
 from backend.models.user_compliance import UserCompliance
 from backend.agents.scheme_matcher import match_schemes
 from backend.agents.compliance_checker import check_compliance
-from backend.schemas.user import UserCreate, LoginRequest, TokenResponse, UserResponse
+from backend.schemas.user import UserCreate, LoginRequest, TokenResponse, UserResponse, UserUpdate
 
 router = APIRouter()
 
@@ -156,3 +156,26 @@ def login(body: LoginRequest, db: Session = Depends(get_db)):
 @router.get("/me", response_model=UserResponse)
 def get_me(current_user=Depends(get_current_user)):
     return current_user
+
+
+@router.put("/profile", response_model=UserResponse)
+def update_profile(body: UserUpdate, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+    user = db.query(User).filter(User.id == current_user.id).first()
+    if not user:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="User not found")
+
+    if body.name is not None:
+        user.name = body.name
+    if body.entity_type is not None:
+        user.entity_type = body.entity_type
+    if body.location is not None:
+        user.location = body.location
+    if body.industry is not None:
+        user.industry = body.industry
+    if body.revenue is not None:
+        user.revenue = body.revenue
+
+    db.commit()
+    db.refresh(user)
+    return user

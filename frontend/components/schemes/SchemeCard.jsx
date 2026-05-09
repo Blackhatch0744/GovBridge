@@ -19,6 +19,12 @@ function SchemeCard({ scheme, match }) {
   const missing = match?.missing_documents || [];
   const readiness = match?.readiness_score || 0;
 
+  // Compute document-based eligibility: (docs the user HAS / total required docs) * 100
+  const requiredDocs = scheme.required_documents || scheme.required_docs || [];
+  const totalRequired = requiredDocs.length;
+  const docsOwned = totalRequired - missing.length;
+  const docEligibility = totalRequired > 0 ? Math.round((docsOwned / totalRequired) * 100) : 0;
+
   const ref = useRef(null);
   const rotateX = useMotionValue(0);
   const rotateY = useMotionValue(0);
@@ -92,7 +98,7 @@ function SchemeCard({ scheme, match }) {
             </div>
           </div>
 
-          <EligibilityBar score={match?.eligibility_score || scheme.eligibility_score || 0} />
+          <EligibilityBar score={match ? docEligibility : (scheme.eligibility_score || 0)} />
 
           <div className="flex items-center gap-3 mt-4 mb-4">
             <span className="text-14 font-mono font-medium text-text-primary">

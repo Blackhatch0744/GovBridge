@@ -34,3 +34,12 @@ class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     user: UserResponse
+
+
+class UserUpdate(BaseModel):
+    name: Optional[str] = None
+    entity_type: Optional[str] = None
+    location: Optional[str] = None
+    industry: Optional[str] = None
+    revenue: Optional[int] = None
+
